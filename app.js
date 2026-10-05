@@ -108,7 +108,41 @@ async function downloadModel(){
   }
 }
 function newWllama(){const w=new Wllama({default:"https://cdn.jsdelivr.net/npm/@wllama/wllama@3.8.1/src/wasm/wllama.wasm"});w.setCompat("default");return w}
-async function loadEngine(){const file=await modelFile();if(!file||file.size<1000000000)throw new Error("Model is not installed.");$("engineBadge").textContent="Engine: loading…";try{state.wllama=newWllama();await state.wllama.loadModel([file],{n_ctx:state.settings.ctx,n_gpu_layers:-1});state.engine="WebGPU"}catch(gpuError){console.warn("WebGPU failed; retrying CPU/WASM.",gpuError);try{await state.wllama?.exit?.()}catch{}state.wllama=newWllama();await state.wllama.loadModel([file],{n_ctx:state.settings.ctx,n_gpu_layers:0,n_threads:Math.max(2,Math.min(6,navigator.hardwareConcurrency||4))});state.engine="CPU/WASM"}$("engineBadge").textContent="Engine: "+state.engine;$("prompt").disabled=false;$("sendBtn").disabled=false;$("prompt").placeholder="Message Dolphin…"}
+async function webGpuReady(){try{if(!navigator.gpu)return false;const a=await navigator.gpu.requestAdapter();return !!a}catch{return false}}
+function deviceProfile(){const hc=Math.max(1,navigator.hardwareConcurrency||8);return {threads:Math.max(3,Math.min(4,Math.floor(hc/2))),ctx:state.settings.ctx<=2048?state.settings.ctx:2048}}
+async function loadEngine(){
+  const file=await modelFile();
+  if(!file||file.size<1000000000)throw new Error("Model is not installed.");
+  $("engineBadge").textContent="Engine: loading…";
+  const p=deviceProfile();
+  let gpuError=null;
+  if(await webGpuReady()){
+    try{
+      state.wllama=newWllama();
+      await state.wllama.loadModel([file],{n_ctx:p.ctx,n_batch:64,n_threads:p.threads,n_gpu_layers:-1,offload_kqv:true});
+      state.engine="WebGPU";
+    }catch(e){
+      gpuError=e;
+      console.warn("WebGPU unavailable/unstable; switching to CPU/WASM.",e);
+      try{await state.wllama?.exit?.()}catch{}
+      state.wllama=null;
+    }
+  }
+  if(state.engine!=="WebGPU"){
+    state.wllama=newWllama();
+    try{
+      await state.wllama.loadModel([file],{n_ctx:p.ctx,n_batch:64,n_threads:p.threads,n_gpu_layers:0,offload_kqv:false});
+      state.engine="CPU/WASM";
+    }catch(cpuError){
+      try{await state.wllama?.exit?.()}catch{}
+      state.wllama=null;
+      throw new Error("Dolphin engine could not load. WebGPU: "+(gpuError?.message||"unavailable")+" CPU/WASM: "+(cpuError?.message||"failed"));
+    }
+  }
+  $("engineBadge").textContent="Engine: "+state.engine+" · "+p.threads+"T · ctx "+p.ctx;
+  $("prompt").disabled=false;
+  $("sendBtn").disabled=false;
+}
 async function addMessage(role,content){const m={role,content:String(content),createdAt:Date.now()};state.messages.push(m);await idbPut("messages",m);renderMessages();$("welcome").classList.add("hidden");$("chat").classList.remove("hidden")}
 function renderMessages(){const box=$("messages");box.innerHTML="";for(const m of state.messages){const row=document.createElement("div");row.className="message "+m.role;const b=document.createElement("div");b.className="bubble";const r=document.createElement("div");r.className="role";r.textContent=m.role==="user"?"YOU":"DOLPHIN";const c=document.createElement("div");c.textContent=m.content;b.append(r,c);row.appendChild(b);box.appendChild(row)}box.scrollTop=box.scrollHeight}
 async function sendMessage(text){if(!state.wllama||state.generating)return;state.generating=true;$("sendBtn").disabled=true;$("typing").classList.remove("hidden");await addMessage("user",text);const messages=[{role:"system",content:state.settings.systemPrompt},...state.messages.map(m=>({role:m.role,content:m.content}))];try{const result=await state.wllama.createChatCompletion({messages,max_tokens:512,temperature:Number(state.settings.temperature),top_p:.9,top_k:40});const answer=result?.choices?.[0]?.message?.content||"(empty response)";await addMessage("assistant",answer)}catch(e){await addMessage("assistant","Inference error: "+(e?.message||e));console.error(e)}finally{$("typing").classList.add("hidden");state.generating=false;$("sendBtn").disabled=false}}
