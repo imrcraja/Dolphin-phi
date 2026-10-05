@@ -42,4 +42,4 @@ The browser still controls memory limits. A 1.79 GB model can require several GB
 - app.js — storage, downloader, model runtime and chat
 - sw.js — service worker
 - manifest.json — PWA metadata
-- assets/logo.jpg — supplied Dolphin logo
+- assets/logo.svg — supplied Dolphin logo
