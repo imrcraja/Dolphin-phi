@@ -4,7 +4,7 @@ const state={messages:[],settings:{systemPrompt:"You are Dolphin, a helpful AI a
 const DB_NAME="rc-dolphin-ai",DB_VERSION=1;let db;
 function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains("kv"))d.createObjectStore("kv");if(!d.objectStoreNames.contains("messages"))d.createObjectStore("messages",{keyPath:"id",autoIncrement:true})};r.onsuccess=()=>{db=r.result;resolve(db)};r.onerror=()=>reject(r.error)})}
 function idbGet(s,k){return new Promise((a,b)=>{const r=db.transaction(s).objectStore(s).get(k);r.onsuccess=()=>a(r.result);r.onerror=()=>b(r.error)})}
-function idbPut(s,v,k){return new Promise((a,b)=>{const r=db.transaction(s,"readwrite").objectStore(s).put(v,k);r.onsuccess=()=>a(r.result);r.onerror=()=>b(r.error)})}
+function idbPut(s,v,k){return new Promise((a,b)=>{const store=db.transaction(s,"readwrite").objectStore(s);const key=k??(store.keyPath?undefined:v?.key);const r=key===undefined?store.put(v):store.put(v,key);r.onsuccess=()=>a(r.result);r.onerror=()=>b(r.error)})}
 function idbClear(s){return new Promise((a,b)=>{const r=db.transaction(s,"readwrite").objectStore(s).clear();r.onsuccess=()=>a();r.onerror=()=>b(r.error)})}
 function idbAll(s){return new Promise((a,b)=>{const r=db.transaction(s).objectStore(s).getAll();r.onsuccess=()=>a(r.result);r.onerror=()=>b(r.error)})}
 async function modelDir(){if(!navigator.storage?.getDirectory)throw new Error("OPFS is not supported in this browser.");const root=await navigator.storage.getDirectory();return root.getDirectoryHandle("models",{create:true})}
