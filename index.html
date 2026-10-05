@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071522">
+<meta name="description" content="RC Dolphin AI — private, local-first browser AI.">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./assets/logo.jpg">
+<link rel="stylesheet" href="./styles.css">
+<title>RC Dolphin AI</title>
+</head>
+<body>
+<div id="app">
+<header class="topbar"><div class="brand"><img class="brand-logo" src="./assets/logo.jpg" alt="Dolphin logo"><div><strong>Dolphin</strong><span>LOCAL AI</span></div></div><div class="top-actions"><button id="modelBtn" class="icon-btn">Model</button><button id="settingsBtn" class="icon-btn">⚙</button></div></header>
+<main class="main">
+<section id="welcome" class="welcome"><img src="./assets/logo.jpg" class="hero-logo" alt=""><h1>RC Dolphin AI</h1><p>Private, local inference in your browser. No cloud chat API is required.</p><div class="status-row"><span id="engineBadge" class="badge">Engine: not loaded</span><span id="storageBadge" class="badge">Model: not installed</span></div><button id="downloadBtn" class="primary">Download Dolphin Phi 2</button><small>Recommended mobile quant: Q4_K_M (~1.79 GB).</small></section>
+<section id="chat" class="chat hidden"><div id="messages" class="messages"></div><div id="typing" class="typing hidden"><span></span><span></span><span></span></div></section>
+</main>
+<footer class="composer-wrap"><div id="progressPanel" class="progress hidden"><div class="progress-head"><span id="progressText">Preparing model…</span><span id="progressPct">0%</span></div><div class="progress-track"><div id="progressBar"></div></div><button id="cancelDownload" class="text-btn">Cancel</button></div><form id="composer" class="composer"><textarea id="prompt" rows="1" placeholder="Download the model to start…" disabled></textarea><button id="sendBtn" class="send" type="submit" disabled>➤</button></form><div class="footer-note">Runs locally • Chat history stays on this device</div></footer>
+</div>
+<dialog id="modelDialog"><div class="dialog-head"><h2>Model</h2><button class="close" data-close="modelDialog">×</button></div><div class="dialog-body"><div class="model-card"><div><b>Dolphin 2.6 Phi 2 — Q4_K_M</b><p>GGUF • about 1.79 GB • ChatML</p></div><span id="modelState" class="badge">Not installed</span></div><p class="muted">The model is stored in the browser's Origin Private File System. A large amount of free device storage is required.</p><button id="dialogDownload" class="primary">Download / Resume</button><button id="deleteModel" class="danger">Delete local model</button></div></dialog>
+<dialog id="settingsDialog"><div class="dialog-head"><h2>Settings</h2><button class="close" data-close="settingsDialog">×</button></div><div class="dialog-body"><label>System prompt<textarea id="systemPrompt" rows="5"></textarea></label><label>Context size<select id="ctxSize"><option value="1024">1024</option><option value="2048" selected>2048</option><option value="4096">4096</option></select></label><label>Temperature<input id="temperature" type="range" min="0" max="1.5" step="0.05" value="0.7"><span id="tempValue">0.70</span></label><button id="saveSettings" class="primary">Save settings</button></div></dialog>
+<script type="module" src="./app.js"></script>
+</body></html>
