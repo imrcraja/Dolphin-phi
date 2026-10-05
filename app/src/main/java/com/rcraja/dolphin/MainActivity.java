@@ -24,6 +24,10 @@ public class MainActivity extends Activity {
     private File mirrorFile;
     private OutputStream mirrorOut;
     private static final int PICK_RESTORE=4101;
+    private Uri restoreUri;
+    private InputStream restoreIn;
+    private long restoreSize=0;
+    private long restoreOffset=0;
 
     private File modelMirror(){File root=new File(getExternalFilesDir(null),"models");if(!root.exists())root.mkdirs();return new File(root,"dolphin-2_6-phi-2.Q4_K_M.gguf");}
 
