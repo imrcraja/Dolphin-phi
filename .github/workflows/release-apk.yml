@@ -34,16 +34,22 @@ jobs:
           mkdir -p app/src/main/assets/www/assets
           cp assets/logo.svg app/src/main/assets/www/assets/logo.svg
 
-      - name: Create temporary release signing key
+      - name: Restore permanent release signing key
+        env:
+          DOLPHIN_KEYSTORE_B64: ${{ secrets.DOLPHIN_KEYSTORE_B64 }}
+          DOLPHIN_KEYSTORE_PASSWORD: ${{ secrets.DOLPHIN_KEYSTORE_PASSWORD }}
+          DOLPHIN_KEY_ALIAS: ${{ secrets.DOLPHIN_KEY_ALIAS }}
+          DOLPHIN_KEY_PASSWORD: ${{ secrets.DOLPHIN_KEY_PASSWORD }}
         run: |
-          keytool -genkeypair -v             -keystore release-keystore.jks             -alias dolphin-release             -keyalg RSA -keysize 2048 -validity 10000             -storepass dolphin-release-pass             -keypass dolphin-release-pass             -dname "CN=RC Dolphin AI, OU=RC Raja, O=RC Raja, L=India, ST=West Bengal, C=IN"
+          test -n "$DOLPHIN_KEYSTORE_B64"
+          echo "$DOLPHIN_KEYSTORE_B64" | base64 --decode > release-keystore.jks
 
       - name: Build signed release APK
         env:
           DOLPHIN_KEYSTORE_PATH: release-keystore.jks
-          DOLPHIN_KEYSTORE_PASSWORD: dolphin-release-pass
-          DOLPHIN_KEY_ALIAS: dolphin-release
-          DOLPHIN_KEY_PASSWORD: dolphin-release-pass
+          DOLPHIN_KEYSTORE_PASSWORD: ${{ secrets.DOLPHIN_KEYSTORE_PASSWORD }}
+          DOLPHIN_KEY_ALIAS: ${{ secrets.DOLPHIN_KEY_ALIAS }}
+          DOLPHIN_KEY_PASSWORD: ${{ secrets.DOLPHIN_KEY_PASSWORD }}
         run: gradle --no-daemon assembleRelease
 
       - name: Upload signed release APK
