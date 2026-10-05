@@ -1,0 +1,11 @@
+{
+"name":"RC Dolphin AI",
+"short_name":"Dolphin AI",
+"description":"Local-first Dolphin AI chat running in the browser.",
+"start_url":"./",
+"display":"standalone",
+"background_color":"#06111d",
+"theme_color":"#071522",
+"orientation":"portrait",
+"icons":[{"src":"./assets/logo.jpg","sizes":"512x512","type":"image/jpeg","purpose":"any maskable"}]
+}
