@@ -10,20 +10,21 @@ android {
         versionCode 1
         versionName '1.0.0'
     }
+
     signingConfigs {
         release {
-            def keystoreFile = file(System.getenv("DOLPHIN_KEYSTORE_PATH") ?: "release-keystore.jks")
-            def storePassword = System.getenv("DOLPHIN_KEYSTORE_PASSWORD")
-            def keyAlias = System.getenv("DOLPHIN_KEY_ALIAS")
-            def keyPassword = System.getenv("DOLPHIN_KEY_PASSWORD")
-            if (keystoreFile.exists() && storePassword && keyAlias && keyPassword) {
-                storeFile keystoreFile
-                this.storePassword storePassword
-                this.keyAlias keyAlias
-                this.keyPassword keyPassword
-            }
+            def ksPath = System.getenv("DOLPHIN_KEYSTORE_PATH") ?: "release-keystore.jks"
+            def ksStorePassword = System.getenv("DOLPHIN_KEYSTORE_PASSWORD") ?: "dolphin-release-pass"
+            def ksAlias = System.getenv("DOLPHIN_KEY_ALIAS") ?: "dolphin-release"
+            def ksKeyPassword = System.getenv("DOLPHIN_KEY_PASSWORD") ?: "dolphin-release-pass"
+
+            storeFile file(ksPath)
+            storePassword ksStorePassword
+            keyAlias ksAlias
+            keyPassword ksKeyPassword
         }
     }
+
     buildTypes {
         release {
             signingConfig signingConfigs.release
@@ -31,6 +32,7 @@ android {
         }
     }
 }
+
 dependencies {
     implementation 'androidx.webkit:webkit:1.12.1'
 }
