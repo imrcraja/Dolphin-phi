@@ -6,15 +6,15 @@
 <meta name="theme-color" content="#071522">
 <meta name="description" content="RC Dolphin AI — private, local-first browser AI.">
 <link rel="manifest" href="./manifest.json">
-<link rel="icon" href="./assets/logo.jpg">
+<link rel="icon" href="./assets/logo.svg">
 <link rel="stylesheet" href="./styles.css">
 <title>RC Dolphin AI</title>
 </head>
 <body>
 <div id="app">
-<header class="topbar"><div class="brand"><img class="brand-logo" src="./assets/logo.jpg" alt="Dolphin logo"><div><strong>Dolphin</strong><span>LOCAL AI</span></div></div><div class="top-actions"><button id="modelBtn" class="icon-btn">Model</button><button id="settingsBtn" class="icon-btn">⚙</button></div></header>
+<header class="topbar"><div class="brand"><img class="brand-logo" src="./assets/logo.svg" alt="Dolphin logo"><div><strong>Dolphin</strong><span>LOCAL AI</span></div></div><div class="top-actions"><button id="modelBtn" class="icon-btn">Model</button><button id="settingsBtn" class="icon-btn">⚙</button></div></header>
 <main class="main">
-<section id="welcome" class="welcome"><img src="./assets/logo.jpg" class="hero-logo" alt=""><h1>RC Dolphin AI</h1><p>Private, local inference in your browser. No cloud chat API is required.</p><div class="status-row"><span id="engineBadge" class="badge">Engine: not loaded</span><span id="storageBadge" class="badge">Model: not installed</span></div><button id="downloadBtn" class="primary">Download Dolphin Phi 2</button><small>Recommended mobile quant: Q4_K_M (~1.79 GB).</small></section>
+<section id="welcome" class="welcome"><img src="./assets/logo.svg" class="hero-logo" alt=""><h1>RC Dolphin AI</h1><p>Private, local inference in your browser. No cloud chat API is required.</p><div class="status-row"><span id="engineBadge" class="badge">Engine: not loaded</span><span id="storageBadge" class="badge">Model: not installed</span></div><button id="downloadBtn" class="primary">Download Dolphin Phi 2</button><small>Recommended mobile quant: Q4_K_M (~1.79 GB).</small></section>
 <section id="chat" class="chat hidden"><div id="messages" class="messages"></div><div id="typing" class="typing hidden"><span></span><span></span><span></span></div></section>
 </main>
 <footer class="composer-wrap"><div id="progressPanel" class="progress hidden"><div class="progress-head"><span id="progressText">Preparing model…</span><span id="progressPct">0%</span></div><div class="progress-track"><div id="progressBar"></div></div><button id="cancelDownload" class="text-btn">Cancel</button></div><form id="composer" class="composer"><textarea id="prompt" rows="1" placeholder="Download the model to start…" disabled></textarea><button id="sendBtn" class="send" type="submit" disabled>➤</button></form><div class="footer-note">Runs locally • Chat history stays on this device</div></footer>
