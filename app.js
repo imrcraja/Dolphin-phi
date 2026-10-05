@@ -12,7 +12,101 @@ async function modelHandle(create=false){const d=await modelDir();try{return awa
 async function modelFile(){const h=await modelHandle(false);return h?h.getFile():null}
 async function modelBytes(){try{const f=await modelFile();return f?.size||0}catch{return 0}}
 function fmt(n){if(!n)return"0 B";const u=["B","KB","MB","GB"],i=Math.min(Math.floor(Math.log(n)/Math.log(1024)),3);return(n/1024**i).toFixed(i?2:0)+" "+u[i]}
-async function downloadModel(){state.cancel=false;$("progressPanel").classList.remove("hidden");$("downloadBtn").disabled=true;$("dialogDownload").disabled=true;let offset=await modelBytes(),res;try{res=await fetch(MODEL.url,{headers:offset?{Range:"bytes="+offset+"-"}:{}});if(offset&&res.status!==206){offset=0;res=await fetch(MODEL.url)}if(!res.ok)throw new Error("Model download failed (HTTP "+res.status+")");const total=offset+Number(res.headers.get("Content-Length")||0),h=await modelHandle(true),w=await h.createWritable({keepExistingData:offset>0});if(offset)await w.seek(offset);let loaded=offset;const reader=res.body.getReader();while(true){if(state.cancel){await w.close();throw new Error("Download cancelled.")}const x=await reader.read();if(x.done)break;await w.write(x.value);loaded+=x.value.byteLength;const pct=total?Math.min(100,loaded/total*100):0;$("progressBar").style.width=pct.toFixed(1)+"%";$("progressPct").textContent=pct.toFixed(0)+"%";$("progressText").textContent="Downloading "+fmt(loaded)+(total?" / "+fmt(total):"");await idbPut("kv",{key:"modelMeta",status:"downloading",bytes:loaded,total})}await w.close();await idbPut("kv",{key:"modelMeta",status:"ready",bytes:loaded,total:total||loaded,updatedAt:Date.now()});await setModelState()}catch(e){$("progressText").textContent=e.message;await idbPut("kv",{key:"modelMeta",status:"partial",bytes:await modelBytes(),total:MODEL.size});throw e}finally{$("downloadBtn").disabled=false;$("dialogDownload").disabled=false;setTimeout(()=>$("progressPanel").classList.add("hidden"),1400)}}
+async function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+async function updateDownloadMeta(status,bytes,total){try{await idbPut("kv",{key:"modelMeta",status,bytes,total,updatedAt:Date.now()})}catch{}}
+async function downloadModel(){
+  state.cancel=false;
+  $("progressPanel").classList.remove("hidden");
+  $("downloadBtn").disabled=true;
+  $("dialogDownload").disabled=true;
+  let loaded=await modelBytes();
+  const expectedTotal=MODEL.size;
+  let lastError=null;
+  try{
+    if(loaded>=expectedTotal-1024*1024){
+      await setModelState();
+      return;
+    }
+    await updateDownloadMeta("partial",loaded,expectedTotal);
+    $("progressText").textContent=loaded?"Resuming from "+fmt(loaded)+"…":"Starting download…";
+    for(let attempt=1;attempt<=10;attempt++){
+      if(state.cancel)throw new Error("Download cancelled.");
+      let writer=null;
+      try{
+        const headers=loaded?{Range:"bytes="+loaded+"-"}:{};
+        const res=await fetch(MODEL.url,{headers,cache:"no-store"});
+        if(!res.ok)throw new Error("Model download failed (HTTP "+res.status+")");
+
+        let startOffset=loaded;
+        if(loaded){
+          const range=res.headers.get("Content-Range")||"";
+          const serverStarts=range.match(/^bytes\\s+(\\d+)-/i);
+          if(res.status!==206 || (serverStarts && Number(serverStarts[1])!==loaded)){
+            startOffset=0;
+            loaded=0;
+          }
+        }
+        const contentLength=Number(res.headers.get("Content-Length")||0);
+        const total=(startOffset===0?contentLength:expectedTotal)||expectedTotal;
+        const h=await modelHandle(true);
+        writer=await h.createWritable({keepExistingData:startOffset>0});
+        if(startOffset>0)await writer.seek(startOffset);
+
+        let checkpointBytes=loaded;
+        const reader=res.body?.getReader();
+        if(!reader)throw new Error("Download stream is unavailable.");
+        while(true){
+          if(state.cancel){await writer.close();writer=null;throw new Error("Download cancelled.")}
+          const x=await reader.read();
+          if(x.done)break;
+          await writer.write(x.value);
+          loaded+=x.value.byteLength;
+          const pct=total?Math.min(100,loaded/total*100):0;
+          $("progressBar").style.width=pct.toFixed(1)+"%";
+          $("progressPct").textContent=pct.toFixed(0)+"%";
+          $("progressText").textContent="Downloading "+fmt(loaded)+(total?" / "+fmt(total):"");
+          if(loaded-checkpointBytes>=8*1024*1024){
+            await writer.close();
+            writer=null;
+            checkpointBytes=loaded;
+            await updateDownloadMeta("partial",loaded,total);
+            if(state.cancel)throw new Error("Download cancelled.");
+            writer=await h.createWritable({keepExistingData:true});
+            await writer.seek(loaded);
+          }
+        }
+        if(writer){await writer.close();writer=null}
+        loaded=await modelBytes();
+        if(loaded>=expectedTotal-1024*1024){
+          await updateDownloadMeta("ready",loaded,total||loaded);
+          await setModelState();
+          return;
+        }
+        throw new Error("Download ended early at "+fmt(loaded)+".");
+      }catch(e){
+        lastError=e;
+        try{if(writer)await writer.close()}catch{}
+        loaded=await modelBytes();
+        await updateDownloadMeta("partial",loaded,expectedTotal);
+        if(e.message==="Download cancelled.")throw e;
+        if(attempt>=10)throw new Error("Network error after "+attempt+" attempts. Saved "+fmt(loaded)+"; press Resume to continue.");
+        const wait=Math.min(15000,1000*2**(attempt-1));
+        $("progressText").textContent="Network error. Saved "+fmt(loaded)+". Retrying in "+Math.ceil(wait/1000)+"s…";
+        await sleep(wait);
+      }
+    }
+    throw lastError||new Error("Download failed.");
+  }catch(e){
+    loaded=await modelBytes();
+    await updateDownloadMeta("partial",loaded,expectedTotal);
+    $("progressText").textContent=e.message+" Saved: "+fmt(loaded);
+    throw e;
+  }finally{
+    $("downloadBtn").disabled=false;
+    $("dialogDownload").disabled=false;
+    setTimeout(()=>$("progressPanel").classList.add("hidden"),1800);
+  }
+}
 function newWllama(){const w=new Wllama({default:"https://cdn.jsdelivr.net/npm/@wllama/wllama@3.8.1/src/wasm/wllama.wasm"});w.setCompat("default");return w}
 async function loadEngine(){const file=await modelFile();if(!file||file.size<1000000000)throw new Error("Model is not installed.");$("engineBadge").textContent="Engine: loading…";try{state.wllama=newWllama();await state.wllama.loadModel([file],{n_ctx:state.settings.ctx,n_gpu_layers:-1});state.engine="WebGPU"}catch(gpuError){console.warn("WebGPU failed; retrying CPU/WASM.",gpuError);try{await state.wllama?.exit?.()}catch{}state.wllama=newWllama();await state.wllama.loadModel([file],{n_ctx:state.settings.ctx,n_gpu_layers:0,n_threads:Math.max(2,Math.min(6,navigator.hardwareConcurrency||4))});state.engine="CPU/WASM"}$("engineBadge").textContent="Engine: "+state.engine;$("prompt").disabled=false;$("sendBtn").disabled=false;$("prompt").placeholder="Message Dolphin…"}
 async function addMessage(role,content){const m={role,content:String(content),createdAt:Date.now()};state.messages.push(m);await idbPut("messages",m);renderMessages();$("welcome").classList.add("hidden");$("chat").classList.remove("hidden")}
