@@ -21,8 +21,6 @@ public class MainActivity extends Activity {
     private WebView webView;
     private OutputStream backupOut;
     private Uri backupUri;
-    private InputStream restoreIn;
-    private long restoreSize;
     private File mirrorFile;
     private OutputStream mirrorOut;
     private static final int PICK_RESTORE=4101;
@@ -55,7 +53,6 @@ public class MainActivity extends Activity {
             if(offset!=0&&offset!=restoreOffset){restoreIn.close();restoreIn=getContentResolver().openInputStream(restoreUri);skipFully(restoreIn,offset);}
             byte[] b=new byte[length];int n=0,r;while(n<length&&(r=restoreIn.read(b,n,length-n))>0)n+=r;restoreOffset=offset+n;return android.util.Base64.encodeToString(java.util.Arrays.copyOf(b,n),android.util.Base64.NO_WRAP);
         }
-        private long restoreOffset=0;private Uri restoreUri;
     }
     private final DolphinStorage bridge=new DolphinStorage();
 
