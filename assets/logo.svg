@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><radialGradient id="bg"><stop stop-color="#1b6f9b"/><stop offset="1" stop-color="#06111d"/></radialGradient><radialGradient id="glow"><stop stop-color="#fff"/><stop offset=".22" stop-color="#8cecff"/><stop offset="1" stop-color="#0aa9df"/></radialGradient><linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8fbff"/><stop offset=".45" stop-color="#a9c5d8"/><stop offset="1" stop-color="#35556a"/></linearGradient><filter id="g"><feGaussianBlur stdDeviation="8"/></filter></defs>
+<rect width="512" height="512" rx="90" fill="url(#bg)"/>
+<g opacity=".45" stroke="#6edfff" fill="none"><path d="M35 90h442M35 420h442M90 35v442M420 35v442"/><circle cx="256" cy="256" r="210"/><circle cx="256" cy="256" r="170"/></g>
+<circle cx="256" cy="230" r="145" fill="#5adfff" opacity=".22" filter="url(#g)"/>
+<g stroke="#284a60" stroke-width="9" stroke-linejoin="round">
+<path fill="url(#metal)" d="M165 190c-10-65 29-119 91-126 58-7 104 30 107 82 2 42-25 74-68 83l-35 8-33-33-20 43-44-7z"/>
+<path fill="url(#metal)" d="M250 137c28-29 72-28 95-4 15 16 14 37 1 53-15 18-43 24-70 10l-39-20z"/>
+<path fill="#071522" d="M326 164c16-9 38-8 48 2-9 20-31 29-50 19z"/>
+<circle cx="287" cy="142" r="19" fill="url(#glow)"/>
+<path fill="url(#metal)" d="M179 231c-39 12-76 42-88 83 37-13 72-9 103 11l28-37z"/>
+<path fill="url(#metal)" d="M333 231c45 10 81 39 91 79-36-12-71-7-101 14l-25-39z"/>
+<path fill="url(#metal)" d="M178 275c-44 35-63 83-50 123 31-18 68-21 101-5l28-79z"/>
+<path fill="url(#metal)" d="M334 275c43 33 63 79 52 121-31-18-66-20-99-4l-28-79z"/>
+<path fill="url(#metal)" d="M184 364h145l28 66H156z"/>
+<circle cx="256" cy="321" r="43" fill="url(#glow)"/>
+</g>
+<g stroke="#b9efff" stroke-width="3" opacity=".8"><path d="M256 42v80M256 366v104M42 256h95M375 256h95"/></g>
+<g transform="translate(92 398)" fill="#0b1823" stroke="#bcd7e5" stroke-width="3"><rect width="328" height="66" rx="10" fill="#b7c8d4"/><g fill="#142333" stroke="none"><path d="M15 12h24v18H15zM44 12h24v18H44zM73 12h24v18H73zM102 12h24v18H102zM131 12h24v18H131zM160 12h24v18H160zM189 12h24v18H189zM218 12h24v18H218zM247 12h24v18H247zM276 12h37v18H276zM15 36h35v18H15zM54 36h35v18H54zM93 36h35v18H93zM132 36h72v18H132zM208 36h35v18H208zM247 36h35v18H247zM286 36h27v18H286z"/></g></g>
+</svg>
