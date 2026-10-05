@@ -18,7 +18,7 @@ android {
             def ksAlias = System.getenv("DOLPHIN_KEY_ALIAS") ?: "dolphin-release"
             def ksKeyPassword = System.getenv("DOLPHIN_KEY_PASSWORD") ?: "dolphin-release-pass"
 
-            storeFile file(ksPath)
+            storeFile file("${project.rootProject.projectDir}/" + ksPath)
             storePassword ksStorePassword
             keyAlias ksAlias
             keyPassword ksKeyPassword
