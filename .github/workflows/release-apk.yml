@@ -17,24 +17,38 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+
       - name: Prepare web assets
         run: |
           mkdir -p app/src/main/assets/www
           cp index.html styles.css app.js sw.js manifest.json README.md app/src/main/assets/www/
           mkdir -p app/src/main/assets/www/assets
           cp assets/logo.svg app/src/main/assets/www/assets/logo.svg
-      - name: Build release APK
+
+      - name: Create temporary release signing key
+        run: |
+          keytool -genkeypair -v             -keystore release-keystore.jks             -alias dolphin-release             -keyalg RSA -keysize 2048 -validity 10000             -storepass dolphin-release-pass             -keypass dolphin-release-pass             -dname "CN=RC Dolphin AI, OU=RC Raja, O=RC Raja, L=India, ST=West Bengal, C=IN"
+
+      - name: Build signed release APK
+        env:
+          DOLPHIN_KEYSTORE_PATH: release-keystore.jks
+          DOLPHIN_KEYSTORE_PASSWORD: dolphin-release-pass
+          DOLPHIN_KEY_ALIAS: dolphin-release
+          DOLPHIN_KEY_PASSWORD: dolphin-release-pass
         run: gradle --no-daemon assembleRelease
-      - name: Upload release APK
+
+      - name: Upload signed release APK
         uses: actions/upload-artifact@v4
         with:
           name: rc-dolphin-ai-release
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
