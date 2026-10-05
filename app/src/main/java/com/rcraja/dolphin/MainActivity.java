@@ -36,6 +36,8 @@ public class MainActivity extends Activity {
         @JavascriptInterface public synchronized void beginMirror(String name) throws IOException {if(mirrorOut!=null)mirrorOut.close();mirrorFile=modelMirror();mirrorOut=new BufferedOutputStream(new FileOutputStream(mirrorFile,false),1024*1024);}
         @JavascriptInterface public synchronized void writeMirrorChunk(String b64) throws IOException {if(mirrorOut==null)throw new IOException("Mirror not started");mirrorOut.write(android.util.Base64.decode(b64,android.util.Base64.DEFAULT));}
         @JavascriptInterface public synchronized void finishMirror() throws IOException {if(mirrorOut!=null){mirrorOut.flush();mirrorOut.close();mirrorOut=null;}}
+        @JavascriptInterface public synchronized long mirrorSize(){return modelMirror().exists()?modelMirror().length():0;}
+        @JavascriptInterface public synchronized String readMirrorChunk(long offset,int length) throws IOException {File f=modelMirror();if(!f.exists())throw new IOException("No mirrored model");try(RandomAccessFile raf=new RandomAccessFile(f,"r")){raf.seek(offset);byte[] b=new byte[length];int n=raf.read(b);if(n<0)n=0;return android.util.Base64.encodeToString(java.util.Arrays.copyOf(b,n),android.util.Base64.NO_WRAP);}}
         @JavascriptInterface public synchronized void beginBackup(String name) throws IOException {
             if(android.os.Build.VERSION.SDK_INT<29)throw new IOException("Downloads backup requires Android 10+.");
             if(backupOut!=null)backupOut.close();
